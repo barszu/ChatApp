@@ -37,7 +37,8 @@ export default function checkPrompt(prompt: string) {
     return {
       result: false,
       message:
-        "Oops! It seems there are syntax errors in your code.\nPlease double-check your JavaScript/TypeScript for any mistakes and try again.",
+        "Oops! It seems there are syntax errors or our validator cannot understand your code.\nPlease double-check your JavaScript/TypeScript for any mistakes.\nIf you believe this is a false positive, ignore it.",
+      couldBeValid: true,
     };
   }
   return { result: true, message: "" };

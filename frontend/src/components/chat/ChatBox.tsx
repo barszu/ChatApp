@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Box } from "@chakra-ui/react";
 import InputBox from "./InputBox";
 import ResultsBox from "./ResultsBox";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import getBackendUrl from "@/utils/backendConnection";
 
 import { toaster } from "../ui/toaster";
@@ -32,7 +32,47 @@ async function saveMessages(messages: ChatMessage[]) {
 }
 
 const ChatBox: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(getSavedMessages());
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const didMountRef = useRef(false);
+
+  useEffect(() => {
+    if (didMountRef.current) {
+      saveMessages(messages);
+    } else {
+      didMountRef.current = true;
+    }
+  }, [messages]);
+
+  useQuery({
+    queryKey: ["messages"],
+    queryFn: async () => {
+      let status = "";
+      try {
+        const res = await fetch(getBackendUrl("api/review"));
+        if (!res.ok) {
+          status = res.status.toString();
+          throw new Error("Error fetching messages from server");
+        }
+        const messages = await res.json();
+        setMessages(messages);
+        // await saveMessages(messages);
+        return messages;
+      } catch {
+        const cachedMessages = getSavedMessages();
+        setMessages(cachedMessages);
+        toaster.warning({
+          title: "Error fetching messages from serwer",
+          description:
+            "Could not fetch messages from the server. Cached one will be used." +
+            status,
+        });
+        throw new Error("Error fetching messages from server"); //rethrow the error to trigger the error state in the query
+      }
+    },
+    // retry: false,
+    refetchOnWindowFocus: true,
+    retryDelay: 60 * 1000, // 60s
+  });
 
   const sendPrompt = async (prompt: string) => {
     // alert("Sending prompt: " + prompt);
@@ -72,32 +112,31 @@ const ChatBox: React.FC = () => {
 
   const mutation = useMutation({
     mutationFn: sendPromiseWithToaster,
-    onSuccess: (data, variables) => {
-      const newId = messages.length ? messages[messages.length - 1].id + 1 : 1;
-      const newMessage: ChatMessage = {
-        id: newId,
-        prompt: variables,
-        response: data.response,
-      };
+    onSuccess: (data) => {
+      const newMessage = data.chatMessage;
       setMessages((prev) => [...prev, newMessage]);
     },
   });
 
   const handleSubmit = (prompt: string) => {
-    const { result, message } = checkPrompt(prompt);
+    const { result, message, couldBeValid } = checkPrompt(prompt);
     if (!result) {
-      toaster.warning({
-        title: "Something is wrong with your prompt!",
-        description: message,
-      });
+      if (couldBeValid) {
+        toaster.info({
+          title: "Something could be wrong with your prompt!",
+          description: message,
+        });
+        mutation.mutate(prompt); // send it anyway
+      } else {
+        toaster.warning({
+          title: "Something is wrong with your prompt!",
+          description: message,
+        });
+      }
       return;
     }
     mutation.mutate(prompt);
   };
-
-  useEffect(() => {
-    saveMessages(messages);
-  }, [messages]);
 
   return (
     <>

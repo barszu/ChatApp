@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Tasks",
-  description: "My Tasks - Task Management App",
+  title: "JS/TS Code Reviewer",
+  description: "AI-powered code review tool",
 };
 
 export default function RootLayout({
