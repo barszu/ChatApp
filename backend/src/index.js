@@ -3,6 +3,10 @@ import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { getRevievedCode } from "./services/externalLLM.js";
+import {
+  addChatMessage,
+  getChatMessages,
+} from "./controllers/chatController.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -26,6 +30,15 @@ app.get("/", (req, res) => {
   res.send("Backend seerver is running!");
 });
 
+app.get("/api/review", async (req, res) => {
+  try {
+    const chatMessages = await getChatMessages();
+    return res.json(chatMessages);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/review", reviewLimiter, async (req, res) => {
   const { message } = req.body;
 
@@ -35,7 +48,8 @@ app.post("/api/review", reviewLimiter, async (req, res) => {
 
   try {
     const llmResponse = await getRevievedCode(message);
-    return res.json({ response: llmResponse });
+    const chatMessage = await addChatMessage(message, llmResponse);
+    return res.json({ response: llmResponse, chatMessage: chatMessage });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
