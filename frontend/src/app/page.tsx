@@ -1,15 +1,17 @@
 import { VStack, Heading } from "@chakra-ui/react";
 import ChatBox from "@/components/chat/ChatBox";
 import ThemeSwitchButton from "@/components/util/ThemeSwitchButton";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function Home() {
   return (
-    <VStack py="5" position="relative">
-      <Heading fontSize="3xl" fontWeight="bold" mb={4}>
-        LLM fix me code pls chat
+    <VStack py="10" position="relative">
+      <Heading fontSize={{ base: "2xl", sm: "3xl" }} fontWeight="bold">
+        The JS/TS Code Reviewer
       </Heading>
       <ThemeSwitchButton />
       <ChatBox />
+      <Toaster />
     </VStack>
   );
 }

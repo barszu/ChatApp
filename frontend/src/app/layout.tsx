@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Provider as ChakraProvider } from "@/components/ui/provider";
 import ReactQuerryProvider from "@/app/providers/react-querry";
+import SafeHydration from "@/components/ui/SafeHydration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Tasks",
-  description: "My Tasks - Task Management App",
+  title: "JS/TS Code Reviewer",
+  description: "AI-powered code review tool",
 };
 
 export default function RootLayout({
@@ -27,9 +28,11 @@ export default function RootLayout({
   return (
     <html lang="pl" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ChakraProvider>
-          <ReactQuerryProvider>{children}</ReactQuerryProvider>
-        </ChakraProvider>
+        <SafeHydration>
+          <ChakraProvider>
+            <ReactQuerryProvider>{children}</ReactQuerryProvider>
+          </ChakraProvider>
+        </SafeHydration>
       </body>
     </html>
   );
