@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box } from "@chakra-ui/react";
 import InputBox from "./InputBox";
 import ResultsBox from "./ResultsBox";
+import { useMutation } from "@tanstack/react-query";
+import getBackendUrl from "@/utils/backendConnection";
 
 interface ChatMessage {
   id: number;
@@ -11,35 +13,68 @@ interface ChatMessage {
   response: string;
 }
 
-let dummyMessages: ChatMessage[] = [
-  {
-    id: 1,
-    prompt: "Cześć, jak mogę Ci pomóc?",
-    response: "Witaj! To jest przykładowa odpowiedź.",
-  },
-  {
-    id: 2,
-    prompt: "Pokaż mi jakieś przykłady kodu.",
-    response: "Oto przykładowy kod:\n````js\nconsole.log('Hello World');\n````",
-  },
-];
+function getSavedMessages(): ChatMessage[] {
+  if (typeof window !== "undefined") {
+    const savedMessages = localStorage.getItem("messages");
+    if (savedMessages) {
+      return JSON.parse(savedMessages);
+    }
+  }
+  return [];
+}
 
-dummyMessages = Array(10).fill(dummyMessages).flat();
+async function saveMessages(messages: ChatMessage[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("messages", JSON.stringify(messages));
+}
 
 const ChatBox: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(dummyMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(getSavedMessages());
+
+  const sendPrompt = async (prompt: string) => {
+    // alert("Sending prompt: " + prompt);
+    const res = await fetch(getBackendUrl("api/review"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: prompt }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Error occurred during the request");
+    }
+
+    const decoded = await res.json();
+    // alert("Decoded: " + JSON.stringify(decoded));
+    return decoded;
+  };
+
+  const mutation = useMutation({
+    mutationFn: sendPrompt,
+    onSuccess: (data, variables) => {
+      const newId = messages.length ? messages[messages.length - 1].id + 1 : 1;
+      const newMessage: ChatMessage = {
+        id: newId,
+        prompt: variables,
+        response: data.response,
+      };
+      setMessages((prev) => [...prev, newMessage]);
+    },
+    onError: (error) => {
+      alert("ERROR when send:" + error);
+    },
+  });
 
   const handleSubmit = (prompt: string) => {
-    const newId = messages.length ? messages[messages.length - 1].id + 1 : 1;
-    const response = `Otrzymałem Twój prompt: ${prompt}`; //mocked
-    const newMessage: ChatMessage = { id: newId, prompt, response };
-    setMessages((prev) => [...prev, newMessage]);
+    mutation.mutate(prompt);
   };
+
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   return (
     <>
-      <Box width={"11/12"} maxWidth={1000} p={4}>
-        {/* Kontener wiadomości z automatycznym przewijaniem */}
+      <Box width={{ base: "100%", md: "11/12" }} maxWidth={1000} p={{ md: 4 }}>
         <Box overflowY="auto" px={4} height="100%">
           {messages.map((message, idx) => (
             <Box key={idx} mb={4}>
