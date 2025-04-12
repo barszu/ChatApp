@@ -36,9 +36,9 @@ export default function ResultsBox({ response, prompt }: ResultsBoxProps) {
 
   return (
     <Box
-      p={4}
+      p={{ base: 4, md: 6, lg: 8 }}
       borderWidth="1px"
-      borderRadius="md"
+      borderRadius={{ base: 10, md: 20 }}
       my={4}
       overflow="auto"
       boxShadow="md"
