@@ -5,9 +5,13 @@ import { useColorModeValue } from "../ui/color-mode";
 
 interface InputBoxProps {
   onSubmit: (prompt: string) => void;
+  buttonDisabled?: boolean;
 }
 
-const InputBox: React.FC<InputBoxProps> = ({ onSubmit }) => {
+const InputBox: React.FC<InputBoxProps> = ({
+  onSubmit,
+  buttonDisabled = false,
+}) => {
   const [prompt, setPrompt] = useState("");
   const chatInputColor = useColorModeValue("gray.50", "gray.900");
   const accentOnHover = useColorModeValue("cyan.700", "cyan.400");
@@ -66,6 +70,7 @@ const InputBox: React.FC<InputBoxProps> = ({ onSubmit }) => {
           _hover={{ backgroundColor: accentOnHover }}
           _focus={{ backgroundColor: accentOnHover }}
           _active={{ backgroundColor: accentOnHover }}
+          disabled={buttonDisabled}
         >
           Send
         </Button>

@@ -7,6 +7,9 @@ import ResultsBox from "./ResultsBox";
 import { useMutation } from "@tanstack/react-query";
 import getBackendUrl from "@/utils/backendConnection";
 
+import { toaster } from "../ui/toaster";
+import checkPrompt from "@/utils/promtValidators";
+
 interface ChatMessage {
   id: number;
   prompt: string;
@@ -48,8 +51,27 @@ const ChatBox: React.FC = () => {
     return decoded;
   };
 
+  const sendPromiseWithToaster = async (prompt: string) => {
+    const promise = sendPrompt(prompt);
+    toaster.promise(promise, {
+      loading: {
+        title: "Getting your answear...",
+        description: "Please wait...",
+      },
+      success: {
+        title: "Got answear!",
+        description: "Looks great!",
+      },
+      error: {
+        title: "Sorry :(",
+        description: "Something went wrong, please try again.",
+      },
+    });
+    return await promise;
+  };
+
   const mutation = useMutation({
-    mutationFn: sendPrompt,
+    mutationFn: sendPromiseWithToaster,
     onSuccess: (data, variables) => {
       const newId = messages.length ? messages[messages.length - 1].id + 1 : 1;
       const newMessage: ChatMessage = {
@@ -59,12 +81,17 @@ const ChatBox: React.FC = () => {
       };
       setMessages((prev) => [...prev, newMessage]);
     },
-    onError: (error) => {
-      alert("ERROR when send:" + error);
-    },
   });
 
   const handleSubmit = (prompt: string) => {
+    const { result, message } = checkPrompt(prompt);
+    if (!result) {
+      toaster.warning({
+        title: "Something is wrong with your prompt!",
+        description: message,
+      });
+      return;
+    }
     mutation.mutate(prompt);
   };
 
@@ -83,7 +110,7 @@ const ChatBox: React.FC = () => {
           ))}
         </Box>
       </Box>
-      <InputBox onSubmit={handleSubmit} />
+      <InputBox onSubmit={handleSubmit} buttonDisabled={mutation.isPending} />
     </>
   );
 };

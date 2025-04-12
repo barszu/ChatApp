@@ -49,7 +49,7 @@ export default function ResultsBox({ response, prompt }: ResultsBoxProps) {
       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
         {getPromptText(prompt)}
       </ReactMarkdown>
-      <Heading>Response:</Heading>
+      <Heading mt={4}>Response:</Heading>
       <Separator my={2} />
 
       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>

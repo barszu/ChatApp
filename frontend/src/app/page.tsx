@@ -1,6 +1,7 @@
 import { VStack, Heading } from "@chakra-ui/react";
 import ChatBox from "@/components/chat/ChatBox";
 import ThemeSwitchButton from "@/components/util/ThemeSwitchButton";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
       </Heading>
       <ThemeSwitchButton />
       <ChatBox />
+      <Toaster />
     </VStack>
   );
 }
